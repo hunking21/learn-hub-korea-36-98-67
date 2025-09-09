@@ -11,6 +11,7 @@ import { Plus, X, Save, TestTube2, CheckCircle, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { memoryRepo } from "@/repositories/memoryRepo";
 import { allGradesBySystem, normalizeVersion } from "@/utils/versionHelpers";
+import { SectionSelector, type SectionConfig } from "./SectionSelector";
 import type { Test, System, Grade, Target, SectionType } from "@/types/schema";
 
 interface QuickTestBuilderProps {
@@ -20,15 +21,6 @@ interface QuickTestBuilderProps {
   onTestUpdated: () => void;
 }
 
-type SectionPreset = SectionType | 'None';
-
-const SECTION_PRESETS: Array<{ value: SectionPreset; label: string; settings?: Record<string, unknown> }> = [
-  { value: 'Listening', label: 'Listening', settings: { audioUrl: '', autoPlay: false } },
-  { value: 'Reading', label: 'Reading', settings: { passageId: '' } },
-  { value: 'Speaking', label: 'Speaking', settings: { recordingEnabled: true, maxRecordingTime: 120 } },
-  { value: 'Writing', label: 'Writing', settings: { maxWords: 300, useRubric: true } },
-  { value: 'None', label: '없음 (빈 버전)' }
-] as const;
 
 const SYSTEMS: Array<{ value: System; label: string }> = [
   { value: 'KR', label: '한국 (KR)' },
@@ -37,15 +29,42 @@ const SYSTEMS: Array<{ value: System; label: string }> = [
 ];
 
 export function QuickTestBuilder({ test, isOpen, onClose, onTestUpdated }: QuickTestBuilderProps) {
+  // Initialize systems and grades from existing test
+  const initializeTargets = () => {
+    if (test?.versions?.[0]?.targets) {
+      const systems = test.versions[0].targets.map(t => t.system);
+      const grades: Record<System, Grade[]> = { KR: [], US: [], UK: [] };
+      test.versions[0].targets.forEach(target => {
+        grades[target.system] = target.grades;
+      });
+      return { systems, grades };
+    }
+    return { systems: ['KR'] as System[], grades: { KR: [], US: [], UK: [] } as Record<System, Grade[]> };
+  };
+
+  const { systems: initialSystems, grades: initialGrades } = initializeTargets();
+  
   const [name, setName] = useState(test?.name || "");
   const [description, setDescription] = useState(test?.description || "");
-  const [selectedSystems, setSelectedSystems] = useState<System[]>(['KR']);
-  const [selectedGrades, setSelectedGrades] = useState<Record<System, Grade[]>>({
-    KR: [],
-    US: [],
-    UK: []
-  });
-  const [selectedPresets, setSelectedPresets] = useState<SectionPreset[]>(['Listening']);
+  const [selectedSystems, setSelectedSystems] = useState<System[]>(initialSystems);
+  const [selectedGrades, setSelectedGrades] = useState<Record<System, Grade[]>>(initialGrades);
+  
+  // Initialize sections from existing test or empty
+  const initializeSections = (): SectionConfig[] => {
+    if (test?.versions?.[0]?.sections) {
+      return test.versions[0].sections.map((section, index) => ({
+        id: section.id || `existing-${index}`,
+        label: section.label,
+        type: section.type,
+        timeLimit: section.timeLimit,
+        enabled: true,
+        isCustom: !['Reading', 'Writing', 'Interview', 'Math'].includes(section.label)
+      }));
+    }
+    return [];
+  };
+  
+  const [selectedSections, setSelectedSections] = useState<SectionConfig[]>(initializeSections());
   const [isLoading, setIsLoading] = useState(false);
 
   const { toast } = useToast();
@@ -68,17 +87,6 @@ export function QuickTestBuilder({ test, isOpen, onClose, onTestUpdated }: Quick
     }));
   };
 
-  const handlePresetToggle = (preset: SectionPreset) => {
-    if (selectedPresets.includes(preset)) {
-      setSelectedPresets(prev => prev.filter(p => p !== preset));
-    } else {
-      if (preset === 'None') {
-        setSelectedPresets(['None']);
-      } else {
-        setSelectedPresets(prev => prev.filter(p => p !== 'None').concat([preset]));
-      }
-    }
-  };
 
   const normalizeGrades = (grades: Grade[]): Grade[] => {
     return grades.map(grade => {
@@ -118,7 +126,11 @@ export function QuickTestBuilder({ test, isOpen, onClose, onTestUpdated }: Quick
       US: ['G3', 'G4', 'G5'],
       UK: []
     });
-    setSelectedPresets(['Listening', 'Reading', 'Speaking']);
+    setSelectedSections([
+      { id: 'sample-1', label: 'Reading', type: 'Reading', timeLimit: 50, enabled: true },
+      { id: 'sample-2', label: 'Writing', type: 'Writing', timeLimit: 15, enabled: true },
+      { id: 'sample-3', label: 'Interview', type: 'Speaking', timeLimit: 15, enabled: true },
+    ]);
     
     toast({
       title: "샘플 데이터 생성",
@@ -135,14 +147,15 @@ export function QuickTestBuilder({ test, isOpen, onClose, onTestUpdated }: Quick
     const targets = validateTargets();
     if (targets.length === 0) errors.push("최소 하나의 학년을 선택해야 합니다");
     
-    if (selectedPresets.length === 0) {
-      errors.push("최소 하나의 섹션 프리셋을 선택하거나 '없음'을 선택해야 합니다");
+    const enabledSections = selectedSections.filter(s => s.enabled);
+    if (enabledSections.length === 0) {
+      errors.push("최소 하나의 섹션을 선택해야 합니다");
     }
 
     if (errors.length === 0) {
       toast({
         title: "✓ 검증 통과",
-        description: `타깃 ${targets.length}개, 섹션 ${selectedPresets.length}개가 유효합니다.`,
+        description: `타깃 ${targets.length}개, 섹션 ${enabledSections.length}개가 유효합니다.`,
       });
     } else {
       toast({
@@ -206,20 +219,16 @@ export function QuickTestBuilder({ test, isOpen, onClose, onTestUpdated }: Quick
         versionId = updatedTest?.versions?.[0]?.id || '';
       }
 
-      // Add selected sections if not "None"
-      if (!selectedPresets.includes('None') && versionId) {
-        for (const preset of selectedPresets) {
-          if (preset !== 'None') {
-            const presetData = SECTION_PRESETS.find(p => p.value === preset);
-            if (presetData && presetData.value !== 'None') {
-                await memoryRepo.addSection(testId, versionId, {
-                  label: presetData.label,
-                  type: presetData.value as Exclude<SectionType, 'Instruction' | 'Passage'>,
-                  timeLimit: 30, // Default time limit
-                  settings: presetData.settings
-                });
-            }
-          }
+      // Add enabled sections
+      const enabledSections = selectedSections.filter(s => s.enabled);
+      if (enabledSections.length > 0 && versionId) {
+        for (const section of enabledSections) {
+          await memoryRepo.addSection(testId, versionId, {
+            label: section.label,
+            type: section.type as Exclude<SectionType, 'Instruction' | 'Passage'>,
+            timeLimit: section.timeLimit,
+            settings: {}
+          });
         }
       }
 
@@ -248,7 +257,7 @@ export function QuickTestBuilder({ test, isOpen, onClose, onTestUpdated }: Quick
     setDescription("");
     setSelectedSystems(['KR']);
     setSelectedGrades({ KR: [], US: [], UK: [] });
-    setSelectedPresets(['Listening']);
+    setSelectedSections([]);
     onClose();
   };
 
@@ -352,29 +361,11 @@ export function QuickTestBuilder({ test, isOpen, onClose, onTestUpdated }: Quick
             </CardContent>
           </Card>
 
-          {/* Section Presets */}
-          <Card>
-            <CardHeader>
-              <CardTitle>섹션 프리셋 (선택사항)</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-3 gap-2">
-                {SECTION_PRESETS.map(({ value, label }) => (
-                  <Badge
-                    key={value}
-                    variant={selectedPresets.includes(value) ? "default" : "outline"}
-                    className="cursor-pointer hover:bg-primary/90 justify-center py-2"
-                    onClick={() => handlePresetToggle(value)}
-                  >
-                    {label}
-                  </Badge>
-                ))}
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                선택한 섹션들이 자동으로 추가됩니다. '없음'을 선택하면 빈 버전이 생성됩니다.
-              </p>
-            </CardContent>
-          </Card>
+          {/* Section Selector */}
+          <SectionSelector
+            sections={selectedSections}
+            onSectionsChange={setSelectedSections}
+          />
         </div>
 
         {/* Actions */}
