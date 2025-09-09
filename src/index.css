@@ -1,0 +1,148 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    --background: 40 20% 97%;
+    --foreground: 28 15% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 28 15% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 28 15% 15%;
+
+    --primary: 28 35% 45%;
+    --primary-foreground: 40 20% 97%;
+
+    --secondary: 35 25% 75%;
+    --secondary-foreground: 28 15% 15%;
+
+    --muted: 40 15% 92%;
+    --muted-foreground: 28 10% 50%;
+
+    --accent: 35 25% 75%;
+    --accent-foreground: 28 15% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 35 20% 85%;
+    --input: 35 20% 85%;
+    --ring: 28 35% 45%;
+
+    /* Custom academy colors */
+    --academy-brown: 28 35% 45%;
+    --academy-light-brown: 35 25% 75%;
+    --academy-cream: 40 20% 97%;
+    --academy-text: 28 15% 15%;
+    --academy-muted: 28 10% 50%;
+
+    /* Hero gradient */
+    --hero-gradient: linear-gradient(135deg, hsl(40 20% 97%), hsl(35 15% 94%));
+    
+    /* Smooth transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    --background: 28 25% 8%;
+    --foreground: 40 20% 95%;
+
+    --card: 28 20% 12%;
+    --card-foreground: 40 20% 95%;
+
+    --popover: 28 20% 12%;
+    --popover-foreground: 40 20% 95%;
+
+    --primary: 35 30% 65%;
+    --primary-foreground: 28 25% 8%;
+
+    --secondary: 28 15% 20%;
+    --secondary-foreground: 40 20% 95%;
+
+    --muted: 28 15% 20%;
+    --muted-foreground: 35 10% 70%;
+
+    --accent: 28 15% 20%;
+    --accent-foreground: 40 20% 95%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 28 15% 20%;
+    --input: 28 15% 20%;
+    --ring: 35 30% 65%;
+
+    /* Dark mode academy colors */
+    --academy-brown: 35 30% 65%;
+    --academy-light-brown: 35 20% 40%;
+    --academy-cream: 28 25% 8%;
+    --academy-text: 40 20% 95%;
+    --academy-muted: 35 10% 70%;
+
+    /* Dark hero gradient */
+    --hero-gradient: linear-gradient(135deg, hsl(28 25% 8%), hsl(28 20% 12%));
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* 시험 잠금 모드 스타일 */
+.exam-lockdown-mode {
+  /* 텍스트 선택 차단 */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  
+  /* 드래그 차단 */
+  -webkit-user-drag: none;
+  -khtml-user-drag: none;
+  -moz-user-drag: none;
+  -o-user-drag: none;
+  user-drag: none;
+  
+  /* 복사/붙여넣기 방지 */
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
