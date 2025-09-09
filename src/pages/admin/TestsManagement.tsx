@@ -201,6 +201,7 @@ export default function TestsManagement() {
                   onPreview={handlePreviewTest}
                   onDeploy={handleDeployTest}
                   onClick={handleCardClick}
+                  onTestUpdated={loadTests}
                 />
               ))}
             </div>
