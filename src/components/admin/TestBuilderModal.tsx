@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import { memoryRepo } from "@/repositories/memoryRepo";
 import type { Test, TestVersion, TestSection, Question } from "@/types";
 import { SpeakingQuestionGeneratorModal } from "./SpeakingQuestionGeneratorModal";
+import { BulkQuestionUploader } from "./BulkQuestionUploader";
 
 interface TestBuilderModalProps {
   test: Test | null;
@@ -729,73 +730,86 @@ export function TestBuilderModal({ test, isOpen, onClose, onTestUpdated }: TestB
                       <p className="text-muted-foreground">버전을 먼저 선택해주세요.</p>
                     </CardContent>
                   </Card>
-                ) : selectedVersion.sections?.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-8 text-center">
-                      <p className="text-muted-foreground">섹션을 먼저 생성해주세요.</p>
-                    </CardContent>
-                  </Card>
                 ) : (
-                  <div className="space-y-4">
-                    {selectedVersion.sections?.map(section => (
-                      <Card key={section.id}>
-                        <CardHeader>
-                          <div className="flex items-center justify-between">
-                            <CardTitle className="text-lg">{section.label}</CardTitle>
-                            <Button
-                              onClick={() => handleAddQuestion(section)}
-                              size="sm"
-                            >
-                              <Plus className="h-4 w-4 mr-2" />
-                              문항 추가
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="space-y-3">
-                            {section.questions?.map((question, qIndex) => (
-                              <div key={question.id} className="border rounded-lg p-4">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                      <Badge variant="outline">{question.type}</Badge>
-                                      <Badge variant="secondary">{question.points}점</Badge>
-                                      <span className="text-sm text-muted-foreground">문제 {qIndex + 1}</span>
-                                    </div>
-                                    <p className="text-sm mb-2">{question.prompt}</p>
-                                    {question.choices && (
-                                      <div className="text-xs text-muted-foreground">
-                                        선택지: {question.choices.filter(c => c.trim()).length}개
-                                      </div>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => handleEditQuestion(section, question)}
-                                    >
-                                      <Edit className="h-4 w-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleDeleteQuestion(section, question)}
-                                    >
-                                      <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            )) || (
-                              <div className="text-center py-4 text-muted-foreground">
-                                이 섹션에 문항이 없습니다. 문항을 추가해보세요.
-                              </div>
-                            )}
-                          </div>
+                  <div className="space-y-6">
+                    {/* 일괄 업로드 섹션 */}
+                    <BulkQuestionUploader 
+                      test={testData}
+                      selectedVersion={selectedVersion}
+                      onQuestionsUpdated={refreshTestData}
+                    />
+                    
+                    {/* 기존 문항 관리 */}
+                    {selectedVersion.sections?.length === 0 ? (
+                      <Card>
+                        <CardContent className="py-8 text-center">
+                          <p className="text-muted-foreground">섹션을 먼저 생성해주세요.</p>
                         </CardContent>
                       </Card>
-                    ))}
+                    ) : (
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-semibold">섹션별 문항 관리</h3>
+                        {selectedVersion.sections?.map(section => (
+                          <Card key={section.id}>
+                            <CardHeader>
+                              <div className="flex items-center justify-between">
+                                <CardTitle className="text-lg">{section.label}</CardTitle>
+                                <Button
+                                  onClick={() => handleAddQuestion(section)}
+                                  size="sm"
+                                >
+                                  <Plus className="h-4 w-4 mr-2" />
+                                  문항 추가
+                                </Button>
+                              </div>
+                            </CardHeader>
+                            <CardContent>
+                              <div className="space-y-3">
+                                {section.questions?.map((question, qIndex) => (
+                                  <div key={question.id} className="border rounded-lg p-4">
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <Badge variant="outline">{question.type}</Badge>
+                                          <Badge variant="secondary">{question.points}점</Badge>
+                                          <span className="text-sm text-muted-foreground">문제 {qIndex + 1}</span>
+                                        </div>
+                                        <p className="text-sm mb-2">{question.prompt}</p>
+                                        {question.choices && (
+                                          <div className="text-xs text-muted-foreground">
+                                            선택지: {question.choices.filter(c => c.trim()).length}개
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleEditQuestion(section, question)}
+                                        >
+                                          <Edit className="h-4 w-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleDeleteQuestion(section, question)}
+                                        >
+                                          <Trash2 className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+                                  </div>
+                                )) || (
+                                  <div className="text-center py-4 text-muted-foreground">
+                                    이 섹션에 문항이 없습니다. 문항을 추가해보세요.
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
               </TabsContent>
