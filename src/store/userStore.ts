@@ -38,25 +38,64 @@ class UserStore {
   private initializeDefaultUsers() {
     const users = this.getUsers();
     if (users.length === 0) {
-      // 기본 관리자 계정 생성
-      const defaultAdmin: User = {
-        id: '1',
-        username: 'admin',
-        password: 'admin123!',
-        name: '시스템 관리자',
-        role: 'ADMIN',
-        system: null,
-        grade: null,
-        isActive: true,
-        permissions: {
-          canEditQuestionBank: true,
-          canCreateAccounts: true,
-          canManageTests: true,
-          canViewAnalytics: true
+      // 기본 테스트 계정들 생성
+      const defaultUsers: User[] = [
+        // 관리자 계정
+        {
+          id: '1',
+          username: 'admin',
+          password: 'admin123!',
+          name: '시스템 관리자',
+          role: 'ADMIN',
+          system: null,
+          grade: null,
+          isActive: true,
+          permissions: {
+            canEditQuestionBank: true,
+            canCreateAccounts: true,
+            canManageTests: true,
+            canViewAnalytics: true
+          },
+          createdAt: new Date().toISOString()
         },
-        createdAt: new Date().toISOString()
-      };
-      this.saveUsers([defaultAdmin]);
+        // 선생님 계정
+        {
+          id: '2',
+          username: 'teacher',
+          password: 'teacher123!',
+          name: '테스트 선생님',
+          role: 'TEACHER',
+          system: 'KR',
+          grade: null,
+          isActive: true,
+          permissions: {
+            canEditQuestionBank: false,
+            canCreateAccounts: false,
+            canManageTests: false,
+            canViewAnalytics: true
+          },
+          createdAt: new Date().toISOString()
+        },
+        // 학생 계정
+        {
+          id: '3',
+          username: 'student',
+          password: 'student123!',
+          name: '테스트 학생',
+          role: 'STUDENT',
+          system: 'KR',
+          grade: '중1',
+          isActive: true,
+          permissions: {
+            canEditQuestionBank: false,
+            canCreateAccounts: false,
+            canManageTests: false,
+            canViewAnalytics: false
+          },
+          createdAt: new Date().toISOString()
+        }
+      ];
+      this.saveUsers(defaultUsers);
     }
   }
 
